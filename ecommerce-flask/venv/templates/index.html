@@ -19,11 +19,12 @@
                     <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Shop</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Cart</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Login</a></li>
+                    <li class="nav-item" id="userDisplay"></li>
                 </ul>
             </div>
         </div>
     </nav>
+    
 
     <!-- Hero Section -->
     <header class="bg-primary text-white text-center py-5">
@@ -49,6 +50,34 @@
             {% endfor %}
         </div>
     </div>
+
+    <script>
+        function updateUserInfo() {
+            const user = JSON.parse(localStorage.getItem("user"));
+            const userDisplay = document.getElementById("userDisplay");
+    
+            if (user) {
+                userDisplay.innerHTML = `
+                    <span class="nav-link text-white">Welcome, ${user.name}</span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">Logout</button>
+                `;
+            } else {
+                userDisplay.innerHTML = `
+                    <a class="nav-link" href="/login">Login</a>
+                    <a class="nav-link" href="/register">Register</a>
+                `;
+            }
+        }
+    
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/";
+        }
+    
+        updateUserInfo();
+    </script>
+    
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Admin Dashboard</h2>
+        <button class="btn btn-danger" onclick="logout()">Logout</button>
+
+        <hr>
+
+        <h3>Manage Users</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+        </table>
+
+        <hr>
+
+        <h3>Manage Products</h3>
+        <button class="btn btn-success" onclick="showAddProductForm()">Add Product</button>
+        <div id="addProductForm" style="display: none;" class="mt-3">
+            <input type="text" id="productName" class="form-control mb-2" placeholder="Product Name">
+            <input type="text" id="productArtist" class="form-control mb-2" placeholder="Artist">
+            <input type="number" id="productYear" class="form-control mb-2" placeholder="Year">
+            <input type="number" id="productPrice" class="form-control mb-2" placeholder="Price">
+            <input type="text" id="productImage" class="form-control mb-2" placeholder="Image Filename">
+            <button class="btn btn-primary" onclick="addProduct()">Submit</button>
+        </div>
+
+        <table class="table mt-3">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Artist</th>
+                    <th>Year</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="productsTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Fetch users
+        async function fetchUsers() {
+            const response = await fetch("/admin/users");
+            const users = await response.json();
+            const table = document.getElementById("usersTable");
+            table.innerHTML = "";
+            users.forEach(user => {
+                table.innerHTML += `
+                    <tr>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>
+                            <select onchange="updateUserRole('${user._id}', this.value)">
+                                <option value="customer" ${user.role === "customer" ? "selected" : ""}>Customer</option>
+                                <option value="admin" ${user.role === "admin" ? "selected" : ""}>Admin</option>
+                            </select>
+                        </td>
+                        <td><button class="btn btn-danger btn-sm" onclick="deleteUser('${user._id}')">Delete</button></td>
+                    </tr>`;
+            });
+        }
+
+        // Update user role
+        async function updateUserRole(userId, newRole) {
+            await fetch(`/admin/update-user/${userId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ role: newRole })
+            });
+            fetchUsers();
+        }
+
+        // Delete user
+        async function deleteUser(userId) {
+            await fetch(`/admin/delete-user/${userId}`, {
+                method: "DELETE"
+            });
+            fetchUsers();
+        }
+
+        // Fetch products
+        async function fetchProducts() {
+            const response = await fetch("/products");
+            const products = await response.json();
+            const table = document.getElementById("productsTable");
+            table.innerHTML = "";
+            products.forEach(product => {
+                table.innerHTML += `
+                    <tr>
+                        <td>${product.name}</td>
+                        <td>${product.artist}</td>
+                        <td>${product.year}</td>
+                        <td>${product.price}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product._id}')">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        // Add new product
+        function showAddProductForm() {
+            document.getElementById("addProductForm").style.display = "block";
+        }
+
+        async function addProduct() {
+            const data = {
+                name: document.getElementById("productName").value,
+                artist: document.getElementById("productArtist").value,
+                year: document.getElementById("productYear").value,
+                price: document.getElementById("productPrice").value,
+                image: document.getElementById("productImage").value
+            };
+
+            await fetch("/admin/add-product", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            fetchProducts();
+        }
+
+        // Delete product
+        async function deleteProduct(productId) {
+            await fetch(`/admin/delete-product/${productId}`, {
+                method: "DELETE"
+            });
+            fetchProducts();
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/login";
+        }
+
+        fetchUsers();
+        fetchProducts();
+    </script>
+</body>
+</html>
